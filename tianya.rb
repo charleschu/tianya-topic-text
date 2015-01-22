@@ -6,7 +6,7 @@ time_start = Time.now
 #url = "http://bbs.tianya.cn/post-develop-1868959-1.shtml"
 
 class Topic
-  attr_accessor :url, :content_boxes, :author_id, :text
+  attr_accessor :url, :content_boxes, :author_id, :text, :html
   REPLY_REGEX = /^(\r\n\t\t\t\t\t\t\t\u3000\u3000)@(.+\s(\d+)\u697C.+)/
   CONTENT_BOX_SELECTOR = 'div.atl-item'
   TEXT_BOX_SELECTOR = 'div.bbs-content'
@@ -27,7 +27,7 @@ class Topic
       puts server_error.message
       raise server_error
     end
-    html = Nokogiri::HTML doc
+    @html = Nokogiri::HTML doc
     @content_boxes = html.css('div.atl-item')
   end
 
@@ -47,8 +47,12 @@ class Topic
     end
   end
 
-  def write_to_file(file_path)
-    File.open('file_path', w){|f|f.write(text)}
+  def title
+    @title ||= html.title.gsub(/\s+/, "-")
+  end
+
+  def write_to_file
+    File.open("#{title}.txt", 'w'){|f|f.write(text)}
   end
 
   class ContentBox
@@ -70,6 +74,7 @@ class Topic
       @content_box_object.css(Topic::TEXT_BOX_SELECTOR).text
     end
 
+    # set a proxy for all of the content_box_object's method
     def method_missing(name, *args, &block)
       @content_box_object.send(name, *args, &block)
     end
