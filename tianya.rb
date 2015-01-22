@@ -12,7 +12,7 @@ class Topic
   TEXT_BOX_SELECTOR = 'div.bbs-content'
 
   def initialize(url)
-    raise "you should add the url" unless url
+    raise "请输入网址" unless url
     @url = url
     set_content_boxes
     set_author_id
@@ -20,8 +20,15 @@ class Topic
   end
 
   def set_content_boxes
-    doc = Nokogiri::HTML(open(url))
-    @content_boxes = doc.css('div.atl-item')
+    begin
+      doc = open(url)
+    rescue OpenURI::HTTPError => e
+      server_error = ServerError.new e
+      puts server_error.message
+      raise server_error
+    end
+    html = Nokogiri::HTML doc
+    @content_boxes = html.css('div.atl-item')
   end
 
   def set_author_id
@@ -65,6 +72,14 @@ class Topic
 
     def method_missing(name, *args, &block)
       @content_box_object.send(name, *args, &block)
+    end
+  end
+
+  class ServerError < StandardError
+    def initialize(open_uri_error_object)
+      @message = open_uri_error_object.message
+      @message = "请检查网址" if @message == "404 Not Found"
+      super(@message)
     end
   end
 end
