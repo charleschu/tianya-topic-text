@@ -13,6 +13,11 @@ class Topic
   CONTENT_BOX_SELECTOR = 'div.atl-item'
   TEXT_BOX_SELECTOR = 'div.bbs-content'
 
+  def self.create(url, from_page_no=1, to_page_no)
+    topic = Topic.new(url, from_page_no, to_page_no)
+    topic.write_to_file
+  end
+
   def initialize(first_page_url, from_page_no=1, to_page_no)
     raise "请输入网址" unless first_page_url
     @first_page_url = first_page_url
@@ -51,6 +56,7 @@ class Topic
 
   def write_to_file
     File.open("#{title}.txt", 'a'){|f|f.write(text)}
+    puts "***帖子已保存于 #{title}.txt***"
   end
 
   class Page
